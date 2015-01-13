@@ -12,4 +12,4 @@ from cqlengine.models import Model
 class TsunamiModel(Model):
     code_gsm = columns.Text(primary_key=True)
     t        = columns.BigInt(primary_key=True)
-    tel      = columns.List(columns.Text)
+    tel      = columns.List(columns.Integer)
