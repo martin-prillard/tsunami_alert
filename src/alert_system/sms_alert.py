@@ -69,4 +69,5 @@ if __name__ == '__main__':
     # send SMS alert
     phones_sms = send_sms(phones_list)
     # calculate process time
-    print calculate_process_time(phones_sms)
+    time = calculate_process_time(phones_sms)
+    print '80 percents of the population received the sms in ' + str(time) + ' seconds'
