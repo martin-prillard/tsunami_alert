@@ -56,3 +56,5 @@ def insert_to_cassandra(tel_by_codes_gsm):
             em1 = TsunamiModel.batch(b).create(code_gsm=tel_by_code_gsm[0],
                                                t=tel_by_code_gsm[1],
                                                tel=tel_by_code_gsm[2])
+
+create_table_cassandra(TsunamiModel)
