@@ -32,7 +32,7 @@ Send SMS alert for each code_gsm's phone numbers
 """
 def send_sms(GSM_code, phones_list):
     sms_GSM_code = pd.DataFrame(columns=['GSM_code','tel_num','sending_time'])
-
+    
     for phone in phones_list: #todo check, numero unique
         ts = datetime.datetime.now()
         d = [GSM_code,phone,ts]
@@ -40,7 +40,7 @@ def send_sms(GSM_code, phones_list):
         #print d
         #print sms_GSM_code
         #print 'SMS alert sent at ' + str(ts) + ' to ' + str(phone)
-    
+        
     return sms_GSM_code
 
 
@@ -48,11 +48,12 @@ def calculate_80_percent_time(total_sms_sent, start_time):
     catch = False
     for (index, row) in total_sms_sent.iterrows():
         if catch == False:
-            if row['percentage']<0.8:
+            if row['percentage_sent']<0.8:
                 time = row['sending_time']
             else:
                 catch = True
-                #print row['duration']-start_time
+    return time
+               #print row['duration']-start_timer
                     
 
 
@@ -62,26 +63,27 @@ if __name__ == '__main__':
     #longitude = raw_input("longitude :")
     #tsunami_date = raw_input("time of the impact : ")
 
+    # get the time when the process is starting
+    start_timer = datetime.datetime.now()
+
     time_start = timestamp_to_minute(date_start)
     time_step = timestamp_to_minute(date_end)
     t = minute_to_timeslot(timestamp_to_minute(tsunami_date), time_start, time_step)
 
-    # get the time when the process is starting
-    start_time = datetime.datetime.now()
-
     # get list of GSM codes near the epicentre
     code_gsm_list = get_GSM_codes_close_to_impact(latitude, longitude, km_range)['GSM_code'].tolist()
 
-    total_sms_sent = pd.DataFrame(columns=['GSM_code','tel_num','sending_hour'])
+    total_sms_sent = pd.DataFrame(columns=['GSM_code','tel_num'])#,'sending_hour'])
 
     for code_gsm in code_gsm_list:
         try:
             #phones_list = phones_list + TsunamiModel.filter(code_gsm=code_gsm, t=t).limit(1)[0].tel
             # get phone numbers (within code_gsm zone) to send SMS alert
-            phones_list = get_phone_numbers(code_gsm, t)
+            #phones_list = get_phone_numbers(code_gsm, t)
+            phones_list = ['12324343', '1231231432554','465465456','6546546546']
             # send SMS alert
             sms_sent_GSM_zone = send_sms(code_gsm, phones_list)
-            total_sms_sent.append(sms_sent_GSM_zone)
+            total_sms_sent = total_sms_sent.append(sms_sent_GSM_zone)
         except:
             pass
 
@@ -91,21 +93,23 @@ if __name__ == '__main__':
     GSM_Coord = pd.read_csv(csv_gsm_coord)
 
     # TODO modif
-    """
+    
+    
     total_sms_sent.reset_index(inplace=True, drop=True)
     #calculate the sendig duration for each timezone
-    total_sms_sent['duration'] = total_sms_sent.apply(lambda x : total_sms_sent[total_sms_sent['GSM_code']==x['GSM_code']]['sending_hour'].max()-total_sms_sent[total_sms_sent['GSM_code']==x['GSM_code']]['sending_hour'].min(), axis=1)
+    total_sms_sent['duration'] = total_sms_sent.apply(lambda x : total_sms_sent[total_sms_sent['GSM_code']==x['GSM_code']]['sending_time'].max()-total_sms_sent[total_sms_sent['GSM_code']==x['GSM_code']]['sending_time'].min(), axis=1)
     #calculate the sendig time for each timezone
     total_sms_sent['number_sms_sent']=total_sms_sent.apply(lambda x : total_sms_sent.groupby('GSM_code').count()['tel_num'][x['GSM_code']],axis=1)
     total_sms_sent = total_sms_sent.groupby('GSM_code').first()
+    total_sms_sent.reset_index(inplace=True, drop=False)
     total_sms_sent=total_sms_sent.merge(GSM_Coord,on='GSM_code')
     total_sms_sent['cum_sum_sms']=total_sms_sent['number_sms_sent'].cumsum()
-    total_sms_sent['percentage_sent']=total_sms_sent['cum_sum_sms']/total_sms_sent['num_sms'].sum()
-    total_sms_sent=total_sms_sent[['GSM_code','latitude', 'longitude','sending_hour','number_sms_sent','cum_sum_sms','percentage_sent','duration']]
-    """
+    total_sms_sent['percentage_sent']=total_sms_sent['cum_sum_sms']/total_sms_sent['number_sms_sent'].sum()
+    total_sms_sent=total_sms_sent[['GSM_code','sending_time','number_sms_sent','cum_sum_sms','percentage_sent','duration','latitude', 'longitude']]
+    
     # calculate and display process time
-    time_80 = calculate_80_percent_time(total_sms_sent,start_time)
+    time_80 = calculate_80_percent_time(total_sms_sent,start_timer)
 
-    print 'alert process started at ' + str(start_time)
+    print 'alert process started at ' + str(start_timer)
     print 'sms sending completed at ' + str(end_time)
-    print '80 percents of the population received the sms in ' + str(time_80) + ' seconds' #TODO None value :-(
+    print '80 percents of the population received the sms in ' + str(time_80-start_timer) + ' hours' #TODO None value :-(
