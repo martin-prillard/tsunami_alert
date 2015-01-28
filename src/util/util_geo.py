@@ -16,15 +16,6 @@ def calc_coord(row):
     row['coordinates'] = (row['latitude'], row['longitude'])
     return row
 
-"""
-Calculate the coordinates of the centers of different GSM Zones
-"""
-def generate_GSM_zone_coordinates_CSV(data):
-    GSM_Coord = data.groupby('GSM_code').mean()
-    GSM_Coord = GSM_Coord.drop(['tel_num', 'timestamp','timeslot_cassandra'],axis=1)
-    GSM_Coord = GSM_Coord.apply(lambda x : calc_coord(x), axis = 1)
-    GSM_Coord.to_csv('../../dataset/GSM_Coord.csv', encoding='utf-8')
-
 
 """
 Calculate distance between seism and a given coordinate
@@ -32,6 +23,7 @@ Calculate distance between seism and a given coordinate
 def get_distance_to_seism(row, impact_coordinates):
     row['dist_from_seism'] = vincenty(row['coordinates'], impact_coordinates).miles
     return row
+
 
 """
 Get all the GSM codes near the epicentre
@@ -45,6 +37,9 @@ def get_GSM_codes_close_to_impact(latitude, longitude, km_range):
     return GSMZone_dist_500
 
 
+"""
+Get the two closest nodes to impact
+"""
 def get_nodes_close_to_impact(latitude, longitude, km_range):
     Node_dist_to_impact = pd.read_csv('../../dataset/Nodes_locations.csv')
     impact_coord = (latitude, longitude)

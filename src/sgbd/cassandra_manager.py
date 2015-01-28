@@ -5,19 +5,19 @@ __author__ = 'tsunami_team'
 Cassandra manager
 """
 
-from cqlengine.management import sync_table
+from cqlengine import columns
+from cqlengine.models import Model
 from cqlengine import connection
-
 
 # setup the connection to our cassandra server(s) and the default keyspace
 connection.setup(['127.0.0.1'], 'tsunami_project')
 
 
-"""
-Create our CQL table in Cassandra
-"""
-def create_table_cassandra(model):
-    sync_table(model)
+# mapper object with Cassandra model
+class TsunamiModel(Model):
+    code_gsm = columns.Text(primary_key=True)
+    t        = columns.Integer(primary_key=True)
+    tel      = columns.List(columns.Integer)
 
 
 """

@@ -25,9 +25,9 @@ Logger.getLogger("akka").setLevel(level)
 
 
 /*
-  from a date in second, return the right timeslot
+  from a date in minutes, return the right timeslot
 */
-val second_to_timeslot = (date:Int, time_start:Int, time_step:Int) => {
+val minute_to_timeslot = (date:Int, time_start:Int, time_step:Int) => {
  	val timeslot:Int = (date - time_start) / time_step
 	var res:Int = 0
 	if (timeslot == 0) {
@@ -41,7 +41,7 @@ val second_to_timeslot = (date:Int, time_start:Int, time_step:Int) => {
 
 
 /*
-  convert timestamp to seconds
+  convert timestamp to minutes
 */
 val timestamp_to_minute = (date:String) => {
 	val fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS")
@@ -87,7 +87,7 @@ val add_timeslot = (logs:List[(String,Int)], timeslots:Range) => {
 */
 CassandraConnector(sc.getConf).withSessionDo { session =>
     session.execute(s"CREATE KEYSPACE IF NOT EXISTS " + key_space + " WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': " + cassandra_replication + " }")
-    session.execute(s"CREATE TABLE IF NOT EXISTS " + key_space + "." + name_table + " (code_gsm TEXT, timeslot TEXT, phone LIST<INT>, PRIMARY KEY ((code_gsm), timeslot))")
+    session.execute(s"CREATE TABLE IF NOT EXISTS " + key_space + "." + name_table + " (code_gsm TEXT, timeslot INT, phone LIST<INT>, PRIMARY KEY ((code_gsm), timeslot))")
     session.execute(s"TRUNCATE " + key_space + "." + name_table)
 }
 
@@ -106,7 +106,7 @@ val csv = sc.textFile(csv_input)
 */ 
 val by_timeslot_gsm = csv.map(_.split(";")) //split csv lines
 	// phone, timeslot, gsm_code : (Sap_24, 848777,23705630)
-	.map(x => ( (x(4).toInt), (x(1), second_to_timeslot(timestamp_to_minute(x(0)), time_start, time_step)) ))
+	.map(x => ( (x(4).toInt), (x(1), minute_to_timeslot(timestamp_to_minute(x(0)), time_start, time_step)) ))
 	// group by phone : (848777,CompactBuffer((Yok_46,23691680), (Sap_24,23705630), ...))
 	.groupByKey() 
 	// sort by timeslot in descending order : (848777,List((Sap_24,23705630), (Yok_46,23691680), ...))

@@ -9,19 +9,20 @@ import time
 
 
 """
-Convert timestamp to seconds
+Convert timestamp to minutes
 """""
-def timestamp_to_second(x, fmt):
-    return (long)(time.mktime(time.strptime(x, fmt)))
+def timestamp_to_minute(date):
+    fmt = '%Y-%m-%d %H:%M:%S.%f'
+    return (long)((time.mktime(time.strptime(date, fmt))) / 60)
 
 
 """
-From a timestamp, return a timeslot
+From a date in minutes, return the right timeslot
 """
-def get_timeslot(t, time_step, t_start):
-    q = (t - t_start) // time_step
-    if q == 0:
-        return q * time_step + t_start
+def minute_to_timeslot(date, t_start, time_step):
+    timeslot = (date - t_start) // time_step
+    if timeslot == 0:
+        return timeslot * time_step + t_start
     else:
         # (q-1) because we want to contact phone numbers in the previous apart
-        return (q-1) * time_step + t_start
+        return (timeslot-1) * time_step + t_start

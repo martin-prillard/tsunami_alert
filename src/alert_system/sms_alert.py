@@ -8,6 +8,7 @@ Alert SMS system
 import sys
 sys.path.append('../util')
 sys.path.append('../sgbd')
+from util_time import timestamp_to_minute, minute_to_timeslot
 from util_geo import get_GSM_codes_close_to_impact
 from cassandra_manager import get_phone_numbers
 import datetime
@@ -31,30 +32,6 @@ def send_sms(GSM_code, phones_list):
     return sms_GSM_code
 
 
-"""
-Calcul time to send SMS at 80 percent of the population
-"""
-'''def calculate_process_time(start_time, phones_sms):
-    percent = 0
-    cpt = 0
-    total_phones = len(phones_sms)
-    first = True
-    fmt = '%Y-%m-%d %H:%M:%S.%f'
-    for key in phones_sms.keys():
-        if (percent < 80):
-            # fist input
-            if (first):
-                start = timestamp_to_second(phones_sms[key], fmt)
-                stop = timestamp_to_second(phones_sms[key], fmt)
-                first = False
-            cpt = cpt + 1
-            percent = (cpt / total_phones) * 100
-        else:
-            stop = timestamp_to_second(phones_sms[key], fmt)
-            break
-    return stop - start_time'''
-
-
 def calculate_80_percent_time(total_sms_sent, start_time):
     catch = False
     for (index, row) in total_sms_sent.iterrows():
@@ -74,8 +51,7 @@ if __name__ == '__main__':
     #longitude = raw_input("longitude :")
     longitude = 136.907394
     #t = raw_input("time of the impact : ")
-    # TODO : convert t into second
-    t = '1420616296'
+    t = minute_to_timeslot(timestamp_to_minute('2015-01-20 00:00:00,000'))
 
 
     # get the time when the process is starting
