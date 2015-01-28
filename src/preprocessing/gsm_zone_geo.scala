@@ -32,8 +32,9 @@ val merge = (srcPath: String, dstPath: String) => {
   calculate the coordinates of the centers of different GSM Zones
 */
 val generate_GSM_zone_coordinates_CSV = (csv:RDD[String], csv_output:String) => {
+
 	val part_file = csv_output + ".hdfs"
-	FileUtil.fullyDelete(new File(part_file))
+	// remove last results
 	FileUtil.fullyDelete(new File(csv_output))
 
 	csv.map(_.split(";"))
@@ -41,11 +42,12 @@ val generate_GSM_zone_coordinates_CSV = (csv:RDD[String], csv_output:String) => 
 	.groupByKey()
 	.map(x => (x._1, x._2.take(1)))
 	.flatMap { case (k,values) => values.map(k -> _) }
-	.map(x => (x._1, x._2._1, x._2._2))
+	.map(tuple => "%s;%s;%s".format(tuple._1, tuple._2._1, tuple._2._2))
 	.saveAsTextFile(part_file)
+
 	// merge csv files
 	merge(part_file, csv_output)
-
+	// remove temp directory
 	FileUtil.fullyDelete(new File(part_file))
 }
 
