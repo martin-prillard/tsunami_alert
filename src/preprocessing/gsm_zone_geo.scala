@@ -42,7 +42,7 @@ val generate_GSM_zone_coordinates_CSV = (csv:RDD[String], csv_output:String) => 
 	.groupByKey()
 	.map(x => (x._1, x._2.take(1)))
 	.flatMap { case (k,values) => values.map(k -> _) }
-	.map(tuple => "%s;%s;%s".format(tuple._1, tuple._2._1, tuple._2._2))
+	.map(tuple => "%s,\"(%s, %s)\"".format(tuple._1, tuple._2._1, tuple._2._2))
 	.saveAsTextFile(part_file)
 
 	// merge csv files

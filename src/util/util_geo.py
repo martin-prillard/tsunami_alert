@@ -9,6 +9,12 @@ import pandas as pd
 from geopy.distance import vincenty
 
 
+"******************************************************************************************"
+csv_gsm_coord = '../../dataset/GSM_Coord.csv'
+csv_nodes_locations = '../../dataset/Nodes_locations.csv'
+"******************************************************************************************"
+
+
 """
 Transform longitude & latitude into (longitude,latitude)
 """
@@ -29,7 +35,7 @@ def get_distance_to_seism(row, impact_coordinates):
 Get all the GSM codes near the epicentre
 """
 def get_GSM_codes_close_to_impact(latitude, longitude, km_range):
-    GSMZone_dist = pd.read_csv('../../dataset/GSM_Coord.csv')
+    GSMZone_dist = pd.read_csv(csv_gsm_coord)
     impact_coord = (latitude, longitude)
     GSMZone_dist = GSMZone_dist.apply(lambda x : get_distance_to_seism(x, impact_coord), axis=1)
     GSMZone_dist = GSMZone_dist.sort(['dist_from_seism'],ascending=1)
@@ -41,7 +47,7 @@ def get_GSM_codes_close_to_impact(latitude, longitude, km_range):
 Get the two closest nodes to impact
 """
 def get_nodes_close_to_impact(latitude, longitude, km_range):
-    Node_dist_to_impact = pd.read_csv('../../dataset/Nodes_locations.csv')
+    Node_dist_to_impact = pd.read_csv(csv_nodes_locations)
     impact_coord = (latitude, longitude)
     Node_dist_to_impact = Node_dist_to_impact.apply(lambda x : get_distance_to_seism(x, impact_coord), axis=1)
     Node_dist_to_impact = Node_dist_to_impact.sort(['dist_from_seism'],ascending=1)

@@ -9,6 +9,7 @@ import org.apache.log4j.{Level, Logger}
 
 /***********************************************************************************************************/
 val csv_input = "/home/martin/workspace/tsunami_alert/dataset/data_tsunami.csv"
+val date_format = "yyyy-MM-dd HH:mm:ss,SSS"
 val date_start = "2014-12-30 00:00:00,000"
 val date_end = "2015-02-01 00:00:00,000"
 val time_step:Int = 5000 //minutes
@@ -44,7 +45,7 @@ val minute_to_timeslot = (date:Int, time_start:Int, time_step:Int) => {
   convert timestamp to minutes
 */
 val timestamp_to_minute = (date:String) => {
-	val fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS")
+	val fmt = new SimpleDateFormat(date_format)
 	// cast in minutes
 	val res:Int = ((fmt.parse(date).getTime() / 1000).toInt / 60).toInt
 	res

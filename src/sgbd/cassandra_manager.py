@@ -9,25 +9,32 @@ from cqlengine import columns
 from cqlengine.models import Model
 from cqlengine import connection
 
+
+"******************************************************************************************"
+cassandra_cluster_ip = ['127.0.0.1']
+cassandra_keyspace = 'tsunami_project'
+"******************************************************************************************"
+
+
 # setup the connection to our cassandra server(s) and the default keyspace
-connection.setup(['127.0.0.1'], 'tsunami_project')
+connection.setup(cassandra_cluster_ip, cassandra_keyspace)
 
 
 # mapper object with Cassandra model
-class TsunamiModel(Model):
+class tsunami_table(Model):
     code_gsm = columns.Text(primary_key=True)
-    t        = columns.Integer(primary_key=True)
-    tel      = columns.List(columns.Integer)
+    timeslot        = columns.Integer(primary_key=True)
+    phone      = columns.List(columns.Integer)
 
 
 """
 Get the phone numbers to send them SMS alert for each code_gsm
 """
-def get_phone_numbers(code_gsm_list, t):
+def get_phone_numbers(code_gsm, timeslot):
     phones_list = []
-    for code_gsm in code_gsm_list:
-        try:
-            phones_list = phones_list + TsunamiModel.filter(code_gsm=code_gsm, t=t).limit(1)[0].tel
-        except:
-             pass
+    try:
+        phones_list = tsunami_table.filter(code_gsm=code_gsm, timeslot=timeslot).limit(1)[0].phone
+    except:
+         pass
+    # print phones_list # TODO test only
     return phones_list

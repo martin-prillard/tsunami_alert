@@ -8,12 +8,16 @@ Util time functions
 import time
 
 
+"******************************************************************************************"
+date_format = '%Y-%m-%d %H:%M:%S,%f'
+"******************************************************************************************"
+
+
 """
 Convert timestamp to minutes
 """""
 def timestamp_to_minute(date):
-    fmt = '%Y-%m-%d %H:%M:%S.%f'
-    return (long)((time.mktime(time.strptime(date, fmt))) / 60)
+    return (long)((time.mktime(time.strptime(date, date_format))) / 60)
 
 
 """

@@ -15,6 +15,18 @@ import datetime
 import pandas as pd
 
 
+"******************************************************************************************"
+csv_gsm_coord = '../../dataset/GSM_Coord.csv'
+date_start = "2014-12-30 00:00:00,000"
+date_end = "2015-02-01 00:00:00,000"
+km_range = 500
+# test only :
+latitude = 35.557485
+longitude = 136.907394
+tsunami_date = '2015-01-20 00:00:00,000'
+"******************************************************************************************"
+
+
 """
 Send SMS alert for each code_gsm's phone numbers
 """
@@ -25,9 +37,9 @@ def send_sms(GSM_code, phones_list):
         ts = datetime.datetime.now()
         d = [GSM_code,phone,ts]
         sms_GSM_code.loc[len(sms_GSM_code)+1]=d
-        print d
-        print sms_GSM_code
-        print 'SMS alert sent at ' + str(ts) + ' to ' + str(phone)
+        #print d
+        #print sms_GSM_code
+        #print 'SMS alert sent at ' + str(ts) + ' to ' + str(phone)
     
     return sms_GSM_code
 
@@ -40,19 +52,19 @@ def calculate_80_percent_time(total_sms_sent, start_time):
                 time = row['sending_time']
             else:
                 catch = True
-                print row['duration']-start_time
+                #print row['duration']-start_time
                     
 
 
 if __name__ == '__main__':
-    km_range = 500
+    # TODO enable it in production
     #latitude = raw_input("latitude :")
-    latitude = 35.557485
     #longitude = raw_input("longitude :")
-    longitude = 136.907394
-    #t = raw_input("time of the impact : ")
-    t = minute_to_timeslot(timestamp_to_minute('2015-01-20 00:00:00,000'))
+    #tsunami_date = raw_input("time of the impact : ")
 
+    time_start = timestamp_to_minute(date_start)
+    time_step = timestamp_to_minute(date_end)
+    t = minute_to_timeslot(timestamp_to_minute(tsunami_date), time_start, time_step)
 
     # get the time when the process is starting
     start_time = datetime.datetime.now()
@@ -76,9 +88,10 @@ if __name__ == '__main__':
     end_time = datetime.datetime.now()
 
     # Cleaning the output DataFrame, with 'GSM_code','sending_hour','number_sms_sent','duration','latitude', 'longitude'
-    GSM_Coord = pd.read_csv('../dataset/GSM_Coord.csv')
+    GSM_Coord = pd.read_csv(csv_gsm_coord)
 
-
+    # TODO modif
+    """
     total_sms_sent.reset_index(inplace=True, drop=True)
     #calculate the sendig duration for each timezone
     total_sms_sent['duration'] = total_sms_sent.apply(lambda x : total_sms_sent[total_sms_sent['GSM_code']==x['GSM_code']]['sending_hour'].max()-total_sms_sent[total_sms_sent['GSM_code']==x['GSM_code']]['sending_hour'].min(), axis=1)
@@ -89,10 +102,10 @@ if __name__ == '__main__':
     total_sms_sent['cum_sum_sms']=total_sms_sent['number_sms_sent'].cumsum()
     total_sms_sent['percentage_sent']=total_sms_sent['cum_sum_sms']/total_sms_sent['num_sms'].sum()
     total_sms_sent=total_sms_sent[['GSM_code','latitude', 'longitude','sending_hour','number_sms_sent','cum_sum_sms','percentage_sent','duration']]
-
+    """
     # calculate and display process time
-    time = calculate_80_percent_time(total_sms_sent,start_time)
+    time_80 = calculate_80_percent_time(total_sms_sent,start_time)
 
-    print 'alert process started at '+str(start_time)
+    print 'alert process started at ' + str(start_time)
     print 'sms sending completed at ' + str(end_time)
-    print '80 percents of the population received the sms in ' + str(time) + ' seconds'
+    print '80 percents of the population received the sms in ' + str(time_80) + ' seconds' #TODO None value :-(
