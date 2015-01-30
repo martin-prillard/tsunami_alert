@@ -11,6 +11,7 @@ sys.path.append('../sgbd')
 from util_time import timestamp_to_minute, minute_to_timeslot
 from util_geo import get_GSM_codes_close_to_impact
 from cassandra_manager import get_phone_numbers
+import redis_manager as rm
 import datetime
 import pandas as pd
 
@@ -34,6 +35,8 @@ def send_sms(GSM_code, phones_list):
         ts = datetime.datetime.now()
         d = [GSM_code,phone,ts]
         sms_GSM_code.loc[len(sms_GSM_code)+1]=d
+        # redis insert
+        rm.set(phone, ts)
     return sms_GSM_code
 
 
@@ -74,6 +77,9 @@ if __name__ == '__main__':
     number_sms_sent = 0
 
     if (len(code_gsm_list) > 0):
+
+        # clean the last data in redis
+        rm.cleanAll()
 
         for code_gsm in code_gsm_list:
             try:
