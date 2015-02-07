@@ -44,13 +44,14 @@ def get_GSM_codes_close_to_impact(latitude, longitude, km_range):
 
 
 """
-Get the two closest nodes to impact
+Get the id of the closest node to impact
 """
-def get_nodes_close_to_impact(latitude, longitude, km_range):
-    Node_dist_to_impact = pd.read_csv(csv_nodes_locations)
+def get_node_close_to_impact_id(latitude, longitude, km_range):
+    Node_dist_to_impact = pd.read_csv(csv_nodes_locations, sep =";")
     impact_coord = (latitude, longitude)
+    Node_dist_to_impact = Node_dist_to_impact.apply(lambda x : calc_coord(x), axis=1)
     Node_dist_to_impact = Node_dist_to_impact.apply(lambda x : get_distance_to_seism(x, impact_coord), axis=1)
-    Node_dist_to_impact = Node_dist_to_impact.sort(['dist_from_seism'],ascending=1)
-    Closest_nodes = Node_dist_to_impact[0:2]
-    return Closest_nodes
-
+    Node_dist_to_impact = Node_dist_to_impact.sort(['dist_from_seism'],ascending=1).reset_index(drop=True)
+    Closest_node_id = str(Node_dist_to_impact.ix[0]['Node_id'])
+    Closest_node = str(Node_dist_to_impact.ix[0]['Node'])
+    return Closest_node_id, Closest_node

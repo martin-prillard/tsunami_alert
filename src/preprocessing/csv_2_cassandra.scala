@@ -8,14 +8,14 @@ import org.apache.log4j.{Level, Logger}
 
 
 /***********************************************************************************************************/
-val csv_input = "/home/martin/workspace/tsunami_alert/dataset/data_tsunami.csv"
+val csv_input = "s3n://AKIAI5U6WRJOXZVAZLWA:I2u7s0hwu7W3ycwSBFjC8eaGnmeqFx9mkFJpDuEd@bigdata-paristech/projet2014/data/data_100GB.csv"
 val date_format = "yyyy-MM-dd HH:mm:ss,SSS"
 val date_start = "2014-12-30 00:00:00,000"
 val date_end = "2015-02-01 00:00:00,000"
-val time_step:Int = 5000 //minutes
+val time_step:Int = 10 //minutes
 val key_space = "tsunami_project"
 val name_table = "tsunami_table"
-val cassandra_replication = 3
+val cassandra_replication = 2
 val level = Level.WARN
 /***********************************************************************************************************/
 
@@ -84,12 +84,19 @@ val add_timeslot = (logs:List[(String,Int)], timeslots:Range) => {
 
 
 /*
+  Drop table if exists
+*/
+CassandraConnector(sc.getConf).withSessionDo { session =>
+    session.execute("DROP TABLE IF EXISTS " + key_space + "." + name_table)
+}
+
+/*
   Create the keyspace and the table
 */
 CassandraConnector(sc.getConf).withSessionDo { session =>
-    session.execute(s"CREATE KEYSPACE IF NOT EXISTS " + key_space + " WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': " + cassandra_replication + " }")
-    session.execute(s"CREATE TABLE IF NOT EXISTS " + key_space + "." + name_table + " (code_gsm TEXT, timeslot INT, phone LIST<INT>, PRIMARY KEY ((code_gsm), timeslot))")
-    session.execute(s"TRUNCATE " + key_space + "." + name_table)
+    session.execute("CREATE KEYSPACE IF NOT EXISTS " + key_space + " WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': " + cassandra_replication + " }")
+    session.execute("CREATE TABLE IF NOT EXISTS " + key_space + "." + name_table + " (code_gsm TEXT, timeslot INT, phone LIST<INT>, PRIMARY KEY ((code_gsm), timeslot))")
+    session.execute("TRUNCATE " + key_space + "." + name_table)
 }
 
 // list of timeslots according a range in descending order
@@ -105,6 +112,8 @@ val csv = sc.textFile(csv_input)
   pre-process data and insert it into cassandra table
   transform : 2015-01-18 09:19:16,888;Yok_98;35.462635;139.774854;526198
 */ 
+val by_timeslot_gsm = csv.map(_.split(";")).map(x => ( (x(4).toInt), (x(1), minute_to_timeslot(timestamp_to_minute(x(0)), time_start, time_step)) )).groupByKey().mapValues(_.toList.sortBy(_._2).reverse).mapValues(add_timeslot(_, timeslots)).map(x => (x._2.map(y => ((y._1, y._2), x._1)))).flatMap(x => x).groupByKey().map(x => (x._1._1, x._1._2, x._2)).saveToCassandra(key_space, name_table)
+/*
 val by_timeslot_gsm = csv.map(_.split(";")) //split csv lines
 	// phone, timeslot, gsm_code : (Sap_24, 848777,23705630)
 	.map(x => ( (x(4).toInt), (x(1), minute_to_timeslot(timestamp_to_minute(x(0)), time_start, time_step)) ))
@@ -124,5 +133,8 @@ val by_timeslot_gsm = csv.map(_.split(";")) //split csv lines
 	.map(x => (x._1._1, x._1._2, x._2))
 	// save to cassandra
 	.saveToCassandra(key_space, name_table)
+*/
+
+
 
 

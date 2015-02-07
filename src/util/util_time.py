@@ -6,6 +6,7 @@ Util time functions
 """
 
 import time
+from datetime import datetime
 
 
 "******************************************************************************************"
@@ -18,6 +19,13 @@ Convert timestamp to minutes
 """""
 def timestamp_to_minute(date):
     return (long)((time.mktime(time.strptime(date, date_format))) / 60)
+
+
+"""
+Convert timestamp string to timestamp
+"""
+def str_timestamp_to_timestamp(date):
+    return datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f')
 
 
 """

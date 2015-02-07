@@ -7,9 +7,11 @@ Redis manager
 
 import redis
 
+
 "******************************************************************************************"
 redis_ip = '127.0.0.1'
 redis_port = 6379
+redis_list = 'phoneList'
 "******************************************************************************************"
 
 
@@ -25,6 +27,13 @@ def set(key, value):
 
 
 """
+Push an element into a list
+"""
+def lpush(value):
+    r.lpush(redis_list, value)
+
+
+"""
 Get element from redis
 """
 def get(key):
@@ -32,7 +41,22 @@ def get(key):
 
 
 """
+Get element from list
+"""
+def lindex(value):
+    return r.lindex(redis_list, value)
+
+
+"""
 Removes data from ALL databases
 """
 def cleanAll():
     r.flushall()
+
+
+"""
+Return db size
+"""
+def getDbSize():
+    return r.dbsize()
+

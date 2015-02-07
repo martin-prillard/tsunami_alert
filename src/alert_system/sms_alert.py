@@ -8,8 +8,9 @@ Alert SMS system
 import sys
 sys.path.append('../util')
 sys.path.append('../sgbd')
-from util_time import timestamp_to_minute, minute_to_timeslot
-from util_geo import get_GSM_codes_close_to_impact
+from util_time import timestamp_to_minute, minute_to_timeslot, str_timestamp_to_timestamp
+from util_geo import get_GSM_codes_close_to_impact, get_node_close_to_impact_id
+from util_aws import kill_instance
 from cassandra_manager import get_phone_numbers
 import redis_manager as rm
 import datetime
@@ -29,26 +30,16 @@ km_range = 500
 Send SMS alert for each code_gsm's phone numbers
 """
 def send_sms(GSM_code, phones_list):
-    sms_GSM_code = pd.DataFrame(columns=['GSM_code','tel_num','sending_time'])
+    sms_GSM_code = pd.DataFrame(columns=['GSM_code','sending_time'])
     
     for phone in phones_list:
         ts = datetime.datetime.now()
         d = [GSM_code,phone,ts]
         sms_GSM_code.loc[len(sms_GSM_code)+1]=d
         # redis insert
+        rm.lpush(phone)
         rm.set(phone, ts)
     return sms_GSM_code
-
-
-def calculate_80_percent_time(total_sms_sent, start_time):
-    catch = False
-    for (index, row) in total_sms_sent.iterrows():
-        if catch == False:
-            if row['percentage_sent']<0.8:
-                time = row['sending_time']
-            else:
-                catch = True
-    return time
 
 
 if __name__ == '__main__':
@@ -58,6 +49,12 @@ if __name__ == '__main__':
     tsunami_date = raw_input("Time of the impact : ")
 
     print '\nTSUNAMI : (' + str(latitude) + ', ' + str(longitude) + ') at ' + str(tsunami_date)
+
+    print '\n------------------------------------------------------------------------------'
+    instance_id, Closest_node = get_node_close_to_impact_id(latitude, longitude, km_range)
+    # instance = kill_instance(instance_id)
+    print '------------------------------------------------------------------------------'
+    print '\nOMG, the Tsunami destroyed ' + str(Closest_node) + "node (" + str(instance_id) + ') !'
 
     # get the time when the process is starting
     start_timer = datetime.datetime.now()
@@ -73,7 +70,7 @@ if __name__ == '__main__':
 
     print 'Number of GSM Zone to target : ' + str(len(code_gsm_list))
 
-    total_sms_sent = pd.DataFrame(columns=['GSM_code','tel_num'])
+    total_sms_sent = pd.DataFrame(columns=['GSM_code','sending_time'])
     number_sms_sent = 0
 
     if (len(code_gsm_list) > 0):
@@ -87,8 +84,7 @@ if __name__ == '__main__':
                 phones_list = get_phone_numbers(code_gsm, t)
                 number_sms_sent += len(phones_list)
                 # send SMS alert
-                sms_sent_GSM_zone = send_sms(code_gsm, phones_list)
-                total_sms_sent = total_sms_sent.append(sms_sent_GSM_zone)
+                total_sms_sent = total_sms_sent.append(send_sms(code_gsm, phones_list))
             except:
                 pass
 
@@ -99,25 +95,20 @@ if __name__ == '__main__':
 
         # Cleaning the output DataFrame, with 'GSM_code','sending_hour','number_sms_sent','duration'
         GSM_Coord = pd.read_csv(csv_gsm_coord)
-
-        #total_sms_sent.reset_index(inplace=True, drop=True)
-        #calculate the sendig duration for each timezone
-        total_sms_sent['duration'] = total_sms_sent.apply(lambda x : total_sms_sent[total_sms_sent['GSM_code']==x['GSM_code']]['sending_time'].max()-total_sms_sent[total_sms_sent['GSM_code']==x['GSM_code']]['sending_time'].min(), axis=1)
-        #calculate the sendig time for each timezone
-        total_sms_sent['number_sms_sent']=total_sms_sent.apply(lambda x : total_sms_sent.groupby('GSM_code').count()['tel_num'][x['GSM_code']],axis=1)
-        total_sms_sent = total_sms_sent.groupby('GSM_code').first()
         total_sms_sent.reset_index(inplace=True, drop=False)
         total_sms_sent=total_sms_sent.merge(GSM_Coord,on='GSM_code')
-        total_sms_sent['cum_sum_sms']=total_sms_sent['number_sms_sent'].cumsum()
-        total_sms_sent['percentage_sent']=total_sms_sent['cum_sum_sms']/total_sms_sent['number_sms_sent'].sum()
-        total_sms_sent=total_sms_sent[['GSM_code','sending_time','number_sms_sent','cum_sum_sms','percentage_sent','duration']]
+        total_sms_sent=total_sms_sent[['GSM_code','sending_time']]
         # write result in csv file
         total_sms_sent.to_csv(csv_res)
 
         # calculate and display process time
-        time_80 = calculate_80_percent_time(total_sms_sent,start_timer)
+        #time_80 = calculate_80_percent_time(total_sms_sent,start_timer)
 
-        print '80 percents of the population received the sms in ' + str(time_80-start_timer) + ' hours'
+        #print '80 percents of the population received the sms in ' + str(time_80-start_timer) + ' hours'
+
+        x = int(rm.getDbSize() * 0.8)
+        time_80 = str_timestamp_to_timestamp(rm.get(rm.lindex(x)))
+        print 'REDIS 80 percents of the population received the sms in ' + str(time_80-start_timer) + ' hours'
 
     else:
         print '\nSorry, not for us.'

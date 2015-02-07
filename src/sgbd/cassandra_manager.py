@@ -36,5 +36,4 @@ def get_phone_numbers(code_gsm, timeslot):
         phones_list = tsunami_table.filter(code_gsm=code_gsm, timeslot=timeslot).limit(1)[0].phone
     except:
          pass
-    # print phones_list # TODO test only
     return phones_list

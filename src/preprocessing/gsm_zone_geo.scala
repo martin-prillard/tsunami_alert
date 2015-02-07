@@ -7,8 +7,8 @@ import org.apache.log4j.{Level, Logger}
 
 
 /***********************************************************************************************************/
-val csv_input  = "/home/martin/workspace/tsunami_alert/dataset/data_tsunami.csv"
-val csv_gsm_coord = "/home/martin/workspace/tsunami_alert/dataset/GSM_Coord.csv"
+val csv_input  = "s3n://AKIAI5U6WRJOXZVAZLWA:I2u7s0hwu7W3ycwSBFjC8eaGnmeqFx9mkFJpDuEd@bigdata-paristech/projet2014/data/data_100GB.csv"
+val csv_gsm_coord = "../../dataset/GSM_Coord.csv"
 val level = Level.WARN
 /***********************************************************************************************************/
 
