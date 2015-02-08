@@ -108,7 +108,7 @@ if __name__ == '__main__':
         # -1 because there is the redis list
         x = int((rm.getDbSize() -1) * 0.8)
         time_80 = str_timestamp_to_timestamp(rm.get(rm.lindex(x)))
-        print 'REDIS 80 percents of the population received the sms in ' + str(time_80-start_timer) + ' hours'
+        print '80 percents of the population received the sms in ' + str(time_80-start_timer) + ' hours'
 
     else:
         print '\nSorry, not for us.'
