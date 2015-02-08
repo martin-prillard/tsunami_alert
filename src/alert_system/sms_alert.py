@@ -31,14 +31,18 @@ Send SMS alert for each code_gsm's phone numbers
 """
 def send_sms(GSM_code, phones_list):
     sms_GSM_code = pd.DataFrame(columns=['GSM_code','sending_time'])
-    
+
+    ts_gsm = datetime.datetime.now()
+
     for phone in phones_list:
         ts = datetime.datetime.now()
-        d = [GSM_code,phone,ts]
-        sms_GSM_code.loc[len(sms_GSM_code)+1]=d
         # redis insert
         rm.lpush(phone)
         rm.set(phone, ts)
+
+    d = [GSM_code,ts_gsm]
+    sms_GSM_code.loc[0]=d
+
     return sms_GSM_code
 
 
@@ -97,16 +101,12 @@ if __name__ == '__main__':
         GSM_Coord = pd.read_csv(csv_gsm_coord)
         total_sms_sent.reset_index(inplace=True, drop=False)
         total_sms_sent=total_sms_sent.merge(GSM_Coord,on='GSM_code')
-        total_sms_sent=total_sms_sent[['GSM_code','sending_time']]
+        total_sms_sent=total_sms_sent[['GSM_code','coordinates', 'sending_time']]
         # write result in csv file
         total_sms_sent.to_csv(csv_res)
 
-        # calculate and display process time
-        #time_80 = calculate_80_percent_time(total_sms_sent,start_timer)
-
-        #print '80 percents of the population received the sms in ' + str(time_80-start_timer) + ' hours'
-
-        x = int(rm.getDbSize() * 0.8)
+        # -1 because there is the redis list
+        x = int((rm.getDbSize() -1) * 0.8)
         time_80 = str_timestamp_to_timestamp(rm.get(rm.lindex(x)))
         print 'REDIS 80 percents of the population received the sms in ' + str(time_80-start_timer) + ' hours'
 
