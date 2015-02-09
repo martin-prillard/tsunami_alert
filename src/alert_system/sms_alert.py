@@ -101,7 +101,9 @@ if __name__ == '__main__':
         GSM_Coord = pd.read_csv(csv_gsm_coord)
         total_sms_sent.reset_index(inplace=True, drop=False)
         total_sms_sent=total_sms_sent.merge(GSM_Coord,on='GSM_code')
-        total_sms_sent=total_sms_sent[['GSM_code','coordinates', 'sending_time']]
+        total_sms_sent['latitude']=total_sms_sent.coordinates.apply(lambda x: x.replace("\"","").replace("(","").replace(")","").split(",")[0])
+        total_sms_sent['longitude']=total_sms_sent.coordinates.apply(lambda x: x.replace("\"","").replace("(","").replace(")","").split(",")[1])
+        total_sms_sent=total_sms_sent[['GSM_code','latitude', 'longitude', 'sending_time']]
         # write result in csv file
         total_sms_sent.to_csv(csv_res)
 
