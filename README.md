@@ -33,7 +33,12 @@ http://datastax.com/documentation/datastax_enterprise/4.6/datastax_enterprise/in
 $ chmod 400 <YourKeyPair>.pem
 ```
 
-#### 4. initialize cluster
+#### 4. connect to the master to initialize datastax enterprise
+```
+$ ssh -i <myKeyPair>.pem ubuntu@<ip_master>
+```
+
+#### 5. from a local terminal, initialize cluster
 ```
 $ cd /tsunami_team/script/
 $ ./aws_partition_redirect.sh 
@@ -44,11 +49,6 @@ $ <ip_host2> \
 $ <ip_host3> \
 $ <ip_host4> \
 $ <ip_host5>
-```
-
-#### 5. connect to the master to initialize datastax enterprise
-```
-$ ssh -i <myKeyPair>.pem ubuntu@<ip_master>
 ```
 
 #### 6. from the master, execute pre-processing data and insert to cassandra
