@@ -15,8 +15,8 @@ shift
 # get the master host
 master=$1
 
-# launch initialize master script TODO enable
-# ssh -i $pem -o StrictHostKeyChecking=no ubuntu@$master 'bash -s' < 'initialize_master.sh'
+# launch initialize master script
+ssh -i $pem -o StrictHostKeyChecking=no ubuntu@$master 'bash -s' < 'initialize_master.sh'
 
 # initialize forwarding port for spark ui
 for (( p=0; p<=$#; p++ ))
