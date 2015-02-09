@@ -47,7 +47,7 @@ def send_sms(GSM_code, phones_list):
 
 
 if __name__ == '__main__':
-    # TODO enable it in production
+
     latitude = raw_input("\nTsunami latitude   : ")
     longitude = raw_input("Tsunami longitude  : ")
     tsunami_date = raw_input("Time of the impact : ")
