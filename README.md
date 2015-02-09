@@ -26,11 +26,11 @@ http://datastax.com/documentation/datastax_enterprise/4.6/datastax_enterprise/in
   - select your security group (see step one)
   - create your key-pair and save it
   - launch instances
-  - keep hosts list from EC2 dashboard (the master is the instance with "AMI launch index" equals 0)
+  - get hosts list from EC2 dashboard (the master is the instance with "AMI launch index" equals 0)
 
 #### 3. give pem right
 ```
-$ chmod 400 chmod 400 <YourKeyPair>.pem
+$ chmod 400 <YourKeyPair>.pem
 ```
 
 #### 4. initialize cluster
