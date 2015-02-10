@@ -60,6 +60,9 @@ $ setsid dse spark \
 --conf spark.cassandra.output.batch.size.bytes=131072 \
 -i /home/ubuntu/tsunami_alert/src/preprocessing/csv_2_cassandra.scala
 ```
+
+#### 7. from the master, edit the /dataset/Node_locations.csv file with each EC2 instance ID
+
 <br/>
 **optional :**
   - check datastax enterprise dashboard on your browser :
@@ -93,6 +96,7 @@ $ python sms_alert.py
 #### 2. Select longitude, latitude and Tsunami date into the terminal
 
 #### 3. Enjoy !
+**Note :** Tsunami will kill the closest instance of the tsunami impact.
 
 <br/>
 ## Problem(s) ?
