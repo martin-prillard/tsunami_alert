@@ -102,17 +102,3 @@ $ python sms_alert.py
   - Tsunami will kill the closest instance of the tsunami impact.
   <br/>
   - To visualize it, use the /dataset/res_x.csv (x is the number of tsunami replicate) : [here with CartoDB](http://cdb.io/1KB1tmL)
-
-
-<br/>
-## Problem(s) ?
-**Spark conf :**
-<br/>
-/etc/dse/spark/
-<br/>
-<br/>
-**Spark log :**
-<br/>
-/var/lib/spark/work/
-<br/>
-/var/log/spark/
