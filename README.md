@@ -30,7 +30,7 @@ http://datastax.com/documentation/datastax_enterprise/4.6/datastax_enterprise/in
   - launch instances
   - get hosts list from EC2 dashboard (the master is the instance with "AMI launch index" equals 0)
 
-#### 3. give pem right
+#### 3. give pem rights
 ```
 $ chmod 400 <YourKeyPair>.pem
 ```
@@ -99,6 +99,6 @@ $ python sms_alert.py
 
 #### 3. Enjoy !
 **Note :**
-  - Tsunami will kill the closest instance of the tsunami impact.
+  - Tsunami will kill the closest instance to the tsunami impact.
   <br/>
   - To visualize it, use the /dataset/res_x.csv (x is the number of tsunami replicate) : [here with CartoDB](http://cdb.io/1KB1tmL)
