@@ -48,6 +48,16 @@ def lindex(value):
 
 
 """
+Return true if the key exist
+"""
+def exists(key):
+    if (r.exists(key) == 1):
+       return True
+    else:
+       return False
+
+
+"""
 Removes data from ALL databases
 """
 def cleanAll():

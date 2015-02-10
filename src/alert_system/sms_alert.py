@@ -19,10 +19,11 @@ import pandas as pd
 
 "******************************************************************************************"
 csv_gsm_coord = '../../dataset/GSM_Coord.csv'
-csv_res = '../../dataset/res.csv'
+csv_res_dir = '../../dataset/'
 date_start = "2014-12-30 00:00:00,000"
 date_end = "2015-02-01 00:00:00,000"
 km_range = 500
+cassandra_node = 5
 "******************************************************************************************"
 
 
@@ -34,84 +35,137 @@ def send_sms(GSM_code, phones_list):
 
     ts_gsm = datetime.datetime.now()
 
+    sms_sent = 0
+
     for phone in phones_list:
-        ts = datetime.datetime.now()
-        # redis insert
-        rm.lpush(phone)
-        rm.set(phone, ts)
+        if (not rm.exists(phone)):
+            ts = datetime.datetime.now()
+            # redis insert
+            rm.lpush(phone)
+            rm.set(phone, ts)
+            sms_sent = sms_sent + 1
 
     d = [GSM_code,ts_gsm]
     sms_GSM_code.loc[0]=d
 
-    return sms_GSM_code
+    return sms_GSM_code, sms_sent
+
+
+"""
+Ask a yes/no question via raw_input() and return their answer
+"""
+def query_yes_no(question, default="yes"):
+    valid = {"yes": True, "y": True, "ye": True,
+             "no": False, "n": False}
+    if default is None:
+        prompt = " [y/n] "
+    elif default == "yes":
+        prompt = " [Y/n] "
+    elif default == "no":
+        prompt = " [y/N] "
+    else:
+        raise ValueError("invalid default answer: '%s'" % default)
+
+    while True:
+        sys.stdout.write(question + prompt)
+        choice = raw_input().lower()
+        if default is not None and choice == '':
+            return valid[default]
+        elif choice in valid:
+            return valid[choice]
+        else:
+            sys.stdout.write("Please respond with 'yes' or 'no' "
+                             "(or 'y' or 'n').\n")
 
 
 if __name__ == '__main__':
 
-    latitude = raw_input("\nTsunami latitude   : ")
-    longitude = raw_input("Tsunami longitude  : ")
-    tsunami_date = raw_input("Time of the impact : ")
+    replication = True
 
-    print '\nTSUNAMI : (' + str(latitude) + ', ' + str(longitude) + ') at ' + str(tsunami_date)
+    # clean the last data in redis
+    rm.cleanAll()
 
-    print '\n------------------------------------------------------------------------------'
-    instance_id, Closest_node = get_node_close_to_impact_id(latitude, longitude, km_range)
-    # instance = kill_instance(instance_id)
-    print '------------------------------------------------------------------------------'
-    print '\nOMG, the Tsunami destroyed ' + str(Closest_node) + "node (" + str(instance_id) + ') !'
+    total_number_sms_sent = 0
+    nb_earthquake = 0
 
-    # get the time when the process is starting
-    start_timer = datetime.datetime.now()
+    while (replication):
 
-    print '\nAlert process started at ' + str(start_timer)
+        latitude = raw_input("\nTsunami latitude   : ")
+        longitude = raw_input("Tsunami longitude  : ")
+        tsunami_date = raw_input("Time of the impact : ")
 
-    time_start = timestamp_to_minute(date_start)
-    time_step = timestamp_to_minute(date_end)
-    t = minute_to_timeslot(timestamp_to_minute(tsunami_date), time_start, time_step)
+        print '\nTSUNAMI : (' + str(latitude) + ', ' + str(longitude) + ') at ' + str(tsunami_date)
 
-    # get list of GSM codes near the epicentre
-    code_gsm_list = get_GSM_codes_close_to_impact(latitude, longitude, km_range)['GSM_code'].tolist()
+        print '\n------------------------------------------------------------------------------'
+        instance_id, Closest_node = get_node_close_to_impact_id(latitude, longitude, km_range, nb_earthquake)
+        instance = kill_instance(instance_id)
+        print '------------------------------------------------------------------------------'
+        print '\nOMG, the Tsunami destroyed ' + str(Closest_node) + "node (" + str(instance_id) + ') !'
 
-    print 'Number of GSM Zone to target : ' + str(len(code_gsm_list))
+        nb_earthquake = nb_earthquake + 1
 
-    total_sms_sent = pd.DataFrame(columns=['GSM_code','sending_time'])
-    number_sms_sent = 0
+        # get the time when the process is starting
+        start_timer = datetime.datetime.now()
 
-    if (len(code_gsm_list) > 0):
+        print '\nAlert process started at ' + str(start_timer)
 
-        # clean the last data in redis
-        rm.cleanAll()
+        time_start = timestamp_to_minute(date_start)
+        time_step = timestamp_to_minute(date_end)
+        t = minute_to_timeslot(timestamp_to_minute(tsunami_date), time_start, time_step)
 
-        for code_gsm in code_gsm_list:
-            try:
-                # get phone numbers (within code_gsm zone) to send SMS alert
-                phones_list = get_phone_numbers(code_gsm, t)
-                number_sms_sent += len(phones_list)
-                # send SMS alert
-                total_sms_sent = total_sms_sent.append(send_sms(code_gsm, phones_list))
-            except:
-                pass
+        # get list of GSM codes near the epicentre
+        code_gsm_list = get_GSM_codes_close_to_impact(latitude, longitude, km_range)['GSM_code'].tolist()
 
-        end_time = datetime.datetime.now()
+        print 'Number of GSM Zone to target : ' + str(len(code_gsm_list))
 
-        print 'Alert process completed at ' + str(end_time) + ' in ' + str(end_time-start_timer) + ' hours (' + str(number_sms_sent) + ' sent)'
-        print '\nPost-processing in progress to calculate time to reach 80 percents of the population...'
+        total_sms_sent = pd.DataFrame(columns=['GSM_code','sending_time'])
+        number_sms_sent = 0
 
-        # Cleaning the output DataFrame, with 'GSM_code','sending_hour','number_sms_sent','duration'
-        GSM_Coord = pd.read_csv(csv_gsm_coord)
-        total_sms_sent.reset_index(inplace=True, drop=False)
-        total_sms_sent=total_sms_sent.merge(GSM_Coord,on='GSM_code')
-        total_sms_sent['latitude']=total_sms_sent.coordinates.apply(lambda x: x.replace("\"","").replace("(","").replace(")","").split(",")[0])
-        total_sms_sent['longitude']=total_sms_sent.coordinates.apply(lambda x: x.replace("\"","").replace("(","").replace(")","").split(",")[1])
-        total_sms_sent=total_sms_sent[['GSM_code','latitude', 'longitude', 'sending_time']]
-        # write result in csv file
-        total_sms_sent.to_csv(csv_res)
+        if (len(code_gsm_list) > 0):
 
-        # -1 because there is the redis list
-        x = int((rm.getDbSize() -1) * 0.2)
-        time_80 = str_timestamp_to_timestamp(rm.get(rm.lindex(x)))
+            for code_gsm in code_gsm_list:
+                try:
+                    # get phone numbers (within code_gsm zone) to send SMS alert
+                    phones_list = get_phone_numbers(code_gsm, t)
+                    # send SMS alert
+                    res_pd, sms_sent = send_sms(code_gsm, phones_list)
+                    number_sms_sent += sms_sent
+                    total_sms_sent = total_sms_sent.append(res_pd)
+                except:
+                    pass
 
-        print '80 percents of the population received the sms in ' + str(time_80-start_timer) + ' hours'
+            end_time = datetime.datetime.now()
 
-    else:
-        print '\nSorry, not for us.'
+            print 'Alert process completed at ' + str(end_time) + ' in ' + str(end_time-start_timer) + ' hours (' + str(number_sms_sent) + ' sent)'
+
+            if (number_sms_sent > 0):
+                print '\nPost-processing in progress to calculate time to reach 80 percents of the population...'
+
+                # Cleaning the output DataFrame, with 'GSM_code','sending_hour','number_sms_sent','duration'
+                GSM_Coord = pd.read_csv(csv_gsm_coord)
+                total_sms_sent.reset_index(inplace=True, drop=False)
+                total_sms_sent=total_sms_sent.merge(GSM_Coord,on='GSM_code')
+                total_sms_sent['latitude']=total_sms_sent.coordinates.apply(lambda x: x.replace("\"","").replace("(","").replace(")","").split(",")[0])
+                total_sms_sent['longitude']=total_sms_sent.coordinates.apply(lambda x: x.replace("\"","").replace("(","").replace(")","").split(",")[1])
+                total_sms_sent=total_sms_sent[['GSM_code','latitude', 'longitude', 'sending_time']]
+                # write result in csv file
+                total_sms_sent.to_csv(csv_res_dir + "res_" + str(nb_earthquake) + ".csv")
+
+                # -1 because there is the redis list
+                x = int((rm.getDbSize() -total_number_sms_sent -1) * 0.2)
+                time_80 = str_timestamp_to_timestamp(rm.get(rm.lindex(x)))
+
+                print '80 percents of the population received the sms in ' + str(time_80-start_timer) + ' hours'
+            else:
+                total_number_sms_sent = total_number_sms_sent + number_sms_sent
+
+
+            # if all node are down
+            if (nb_earthquake >= cassandra_node):
+                replication = False
+
+        else:
+            print '\nSorry, not for us.'
+
+        # ask replication or not
+        replication = query_yes_no("\nTsunami replication ?!")

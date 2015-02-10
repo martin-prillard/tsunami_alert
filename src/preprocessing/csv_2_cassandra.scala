@@ -111,29 +111,29 @@ val csv = sc.textFile(csv_input)
 /*
   pre-process data and insert it into cassandra table
   transform : 2015-01-18 09:19:16,888;Yok_98;35.462635;139.774854;526198
+  ----------------------------------------------------------------------
+  1. split csv lines
+  csv.map(_.split(";"))
+  2. phone, timeslot, gsm_code : (Sap_24, 848777,23705630)
+  .map(x => ( (x(4).toInt), (x(1), minute_to_timeslot(timestamp_to_minute(x(0)), time_start, time_step)) ))
+  3. group by phone : (848777,CompactBuffer((Yok_46,23691680), (Sap_24,23705630), ...))
+  .groupByKey()
+  4. sort by timeslot in descending order : (848777,List((Sap_24,23705630), (Yok_46,23691680), ...))
+  .mapValues(_.toList.sortBy(_._2).reverse)
+  5. add missing timeslot for each phone : (848777,Vector((Sap_24,27000000), (Yok_46,27000010), ...))
+  .mapValues(add_timeslot(_, timeslots))
+  6. change the key value, phone to timeslot and gsm_code : Vector(((Sap_24,27000000),848777), ((Yok_46,27000010),848777), ...)
+  .map(x => (x._2.map(y => ((y._1, y._2), x._1))))
+  7. return each element line by line : ((Sap_24,27000000),848777)
+  .flatMap(x => x)
+  8. group by key (timeslot and gsm_code) : ((Sap_24,27000000),CompactBuffer(848777, 872939, ...))
+  .groupByKey()
+  9. transform in an TsunamiModel object
+  .map(x => (x._1._1, x._1._2, x._2))
+  10. save to cassandra
+  .saveToCassandra(key_space, name_table)
 */ 
-val by_timeslot_gsm = csv.map(_.split(";")).map(x => ( (x(4).toInt), (x(1), minute_to_timeslot(timestamp_to_minute(x(0)), time_start, time_step)) )).groupByKey().mapValues(_.toList.sortBy(_._2).reverse).mapValues(add_timeslot(_, timeslots)).map(x => (x._2.map(y => ((y._1, y._2), x._1)))).flatMap(x => x).groupByKey().map(x => (x._1._1, x._1._2, x._2)).saveToCassandra(key_space, name_table)
-/*
-val by_timeslot_gsm = csv.map(_.split(";")) //split csv lines
-	// phone, timeslot, gsm_code : (Sap_24, 848777,23705630)
-	.map(x => ( (x(4).toInt), (x(1), minute_to_timeslot(timestamp_to_minute(x(0)), time_start, time_step)) ))
-	// group by phone : (848777,CompactBuffer((Yok_46,23691680), (Sap_24,23705630), ...))
-	.groupByKey() 
-	// sort by timeslot in descending order : (848777,List((Sap_24,23705630), (Yok_46,23691680), ...))
-	.mapValues(_.toList.sortBy(_._2).reverse) 
-	// add missing timeslot for each phone : (848777,Vector((Sap_24,27000000), (Yok_46,27000010), ...))
-	.mapValues(add_timeslot(_, timeslots))
-	// change the key value, phone to timeslot and gsm_code : Vector(((Sap_24,27000000),848777), ((Yok_46,27000010),848777), ...)
-	.map(x => (x._2.map(y => ((y._1, y._2), x._1))))
-	// return each element line by line : ((Sap_24,27000000),848777)
-	.flatMap(x => x)
-	// group by key (timeslot and gsm_code) : ((Sap_24,27000000),CompactBuffer(848777, 872939, ...))
-	.groupByKey()
-	// transform in an TsunamiModel object
-	.map(x => (x._1._1, x._1._2, x._2))
-	// save to cassandra
-	.saveToCassandra(key_space, name_table)
-*/
+csv.map(_.split(";")).map(x => ( (x(4).toInt), (x(1), minute_to_timeslot(timestamp_to_minute(x(0)), time_start, time_step)) )).groupByKey().mapValues(_.toList.sortBy(_._2).reverse).mapValues(add_timeslot(_, timeslots)).map(x => (x._2.map(y => ((y._1, y._2), x._1)))).flatMap(x => x).groupByKey().map(x => (x._1._1, x._1._2, x._2)).saveToCassandra(key_space, name_table)
 
 
 
