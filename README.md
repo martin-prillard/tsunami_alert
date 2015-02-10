@@ -42,7 +42,8 @@ $ ssh -i <myKeyPair>.pem ubuntu@<ip_master>
 
 #### 5. from a local terminal, initialize cluster
 ```
-$ cd /tsunami_team/script/
+$ cd /tsunami_alert/deploy/
+
 $ ./aws_partition_redirect.sh 
 $ <myKeyPair>.pem \
 $ <ip_master> \
