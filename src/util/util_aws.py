@@ -10,12 +10,12 @@ from boto.ec2.connection import EC2Connection
 
 "******************************************************************************************"
 IMAGE           = 'ami-ada2b6c4' # Basic 64-bit Amazon Linux AMI
-KEY_NAME        = 'TSUNAMI_TEST_0302'
+KEY_NAME        = 'your_pem_file'
 INSTANCE_TYPE   = 'm3.xlarge'
 ZONE            = 'us-east-1d' # Availability zone must match
 SECURITY_GROUPS = ['TESTING_TSUNAMI_0302'] # Security group allows SSH
-AWS_KEY         = 'AKIAI5U6WRJOXZVAZLWA'
-AWS_SECRET_KEY  = 'I2u7s0hwu7W3ycwSBFjC8eaGnmeqFx9mkFJpDuEd'
+AWS_KEY         = 'your_AWS_key'
+AWS_SECRET_KEY  = 'your_secret_key'
 "******************************************************************************************"
 
 
