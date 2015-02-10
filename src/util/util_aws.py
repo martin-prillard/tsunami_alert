@@ -33,6 +33,6 @@ def kill_instance(instance_id):
     instance = conn.get_only_instances(instance_to_kill)
     #kill the corresponding instance
 
-    # instance[0].terminate() # TODO enable
+    instance[0].terminate()
 
     return instance
