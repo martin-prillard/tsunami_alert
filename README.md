@@ -5,7 +5,7 @@ Tsunami alert system on 100 Go on S3, AWS, Spark Scala, Python, Cassandra cluste
 
 
 ## User guide
-<br/>
+
 ### AWS cluster initialization
 <br/>
 #### 1. Create the right security group
@@ -103,7 +103,7 @@ $ python sms_alert.py
   <br/>
   - To visualize it, use the /dataset/res_x.csv (x is the number of tsunami replicate) :
   <br/>
-    [Example with CartoDB!](hap://cdb.io/1KB1tmL)
+    [here with CartoDB](http://cdb.io/1KB1tmL)
 
 
 <br/>
