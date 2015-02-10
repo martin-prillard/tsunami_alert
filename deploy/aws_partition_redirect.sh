@@ -32,7 +32,7 @@ ssh -L 4040:127.0.0.1:4040 -nNT -i $pem -o StrictHostKeyChecking=no ubuntu@$mast
 for host in "$@"
 do
   echo "redirect spark rdd directories for $host"
-  ssh -i $pem -o StrictHostKeyChecking=no ubuntu@$host "sudo mkdir /raid0/spark/; sudo mv /var/lib/spark/* /raid0/spark/; sudo rmdir /var/lib/spark/; sudo ln -s /raid0/spark/ /var/lib/"
+  ssh -i $pem -o StrictHostKeyChecking=no ubuntu@$host 'bash -s' < 'redirect_spark_rdd.sh'
 done
 
 

@@ -14,6 +14,9 @@ pip install geopy
 pip install cqlengine
 sudo apt-get install redis-server
 
+# launch redis-server
+redis-server &
+
 # git clone tsunami project
 cd ~
 git clone https://github.com/martin-prillard/tsunami_alert.git
