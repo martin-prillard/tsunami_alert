@@ -96,7 +96,6 @@ if __name__ == '__main__':
 
         print '\nTSUNAMI : (' + str(latitude) + ', ' + str(longitude) + ') at ' + str(tsunami_date)
 
-        print '\n------------------------------------------------------------------------------'
         instance_id, Closest_node = get_node_close_to_impact_id(latitude, longitude, km_range, nb_earthquake)
         instance = kill_instance(instance_id)
         print '------------------------------------------------------------------------------'
